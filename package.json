@@ -1,0 +1,30 @@
+{
+  "name": "emal",
+  "version": "0.1.0",
+  "description": "Acquire and process scientific data with ease",
+  "type": "module",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/StaloneLab/emal.git"
+  },
+  "keywords": [
+    "science",
+    "data",
+    "acquisition",
+    "processing"
+  ],
+  "author": "Titouan (Stalone) S. <stalone+gh@boxph.one>",
+  "license": "AGPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/StaloneLab/emal/issues"
+  },
+  "homepage": "https://github.com/StaloneLab/emal#readme",
+  "devDependencies": {
+    "jest": "^29.5.0"
+  }
+}
