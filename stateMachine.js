@@ -2,42 +2,69 @@
 /// stateMachine.js – Handles state machines for tokenization.
 ///
 /// State machines declared using this class are meant to transform a string
-/// into an array of tokens.
+/// into tokens.
 /// This process is needed at multiple places in the project, so a global
 /// unified implementation is used.
 
-// A state machine uses states (JS functions) and 
+const MS = {
+	WAITING: 0,
+	RUNNING: 1,
+	PARSED: 2,
+	TRANSFORMED: 3,
+	ERROR: 4,
+};
+
 export class StateMachine {
-	constructor(startState, states, transformers) {
+	constructor(startState, states, options) {
 		this.startState = startState;
 		this.states = states;
-		this.transformers = transformers;
-		this.transformed = false;
+
+		// Transformers can be applied after the tokenization happened, to
+		// preprocess the tokens.
+		this.transformers = options.transformers || {};
+		// Two types of machines are possible: "serial" stores tokens
+		// sequentially in an array, while "parallel" stores them in
+		// an object, without any ordering.
+		this.type = options.type || "parallel";
+
+		this.currentState = MS.WAITING;
 	}
 
-	run(input, tokens = {}) {
-		// The default token "_" contains everything not eaten under other
-		// tokens, it is deleted afterwards.
-		let currentToken = "_";
-		tokens[currentToken] = "";
+	run(input, tokens) {
+		const globalThis = this;
+
+		// Default tokens value depends on the type of state machine
+		if(typeof tokens === "undefined") {
+			if(this.type === "sequential") tokens = new Array();
+			else tokens = {};
+		}
+
+		let currentToken = -1;
+		this.currentState = MS.RUNNING;
 
 		// Declare utility states and functions
-		function token(newToken) {
-			tokens[newToken] = "";
-			currentToken = newToken;
+		function token(context, tokenName) {
+			if(globalThis.type === "sequential") {
+				currentToken++;
+				tokens.push(Object.assign({}, context, { value: "" }));
+			} else {
+				currentToken = tokenName;
+				tokens[currentToken] = Object.assign({}, context, { value: "" });
+			}
 		}
 
 		function eat(charCode) {
-			tokens[currentToken] += String.fromCharCode(charCode);
+			tokens[currentToken].value += String.fromCharCode(charCode);
 		}
 
 		function end() {
+			globalThis.currentState = MS.PARSED;
 			return end;
 		}
 
 		function nok() {
-			console.error("NOK");
-			return end;
+			globalThis.currentState = MS.ERROR;
+			return nok;
 		}
 
 		// Fake context is made of utilities and user-defined states
@@ -46,27 +73,28 @@ export class StateMachine {
 
 		let parsingState = this.states[this.startState];
 
-		for(let charIdx = 0; charIdx < input.length; charIdx++) {
+		for(let charIdx = 0; this.currentState === MS.RUNNING; charIdx++) {
 			const charCode = input.charCodeAt(charIdx);
 			const result = parsingState.call(_this, charCode);
 
 			if(typeof result === "function") {
 				parsingState = result;
 			}
+
+			// Force loop to end (on error) after end of input
+			if(charIdx >= input.length && this.currentState === MS.RUNNING) {
+				this.currentState = MS.ERROR;
+				break;
+			}
 		}
 
 		this.tokens = tokens;
-		this.transformed = false;
-
-		delete tokens._;
 
 		return this;
 	}
 
-	// Transformers can be applied after the tokenization happened, to
-	// preprocess the tokens.
 	transform() {
-		if(this.transformed) return;
+		if(this.currentState >= MS.TRANSFORMED) return this;
 
 		for(const [tokenName, transformer] of Object.entries(this.transformers)) {
 			if(Object.keys(this.tokens).includes(tokenName)) {
@@ -74,7 +102,7 @@ export class StateMachine {
 			}
 		}
 
-		this.transformed = true;
+		this.currentState = MS.TRANSFORMED;
 
 		return this;
 	}

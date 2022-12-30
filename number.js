@@ -23,7 +23,7 @@ function sign(charCode) {
 		return this.startIntPart(charCode);
 	}
 
-	this.token(`${this.isExponent ? "eS" : "s"}ign`);
+	this.token({}, `${this.isExponent ? "eS" : "s"}ign`);
 	this.eat(charCode);
 
 	return startIntPart;
@@ -34,7 +34,7 @@ function startIntPart(charCode) {
 		return this.nok(charCode);
 	}
 
-	this.token(`${this.isExponent ? "eI" : "i"}ntPart`);
+	this.token({}, `${this.isExponent ? "eI" : "i"}ntPart`);
 	this.eat(charCode);
 
 	return intPart;
@@ -46,14 +46,14 @@ function intPart(charCode) {
 		return sign;
 	// Exponents cannot have a floating part
 	} else if(isComma(charCode) && !this.isExponent) {
-		this.token("floatPart");
+		this.token({}, "floatPart");
 		return floatPart;
 	} else if(isDigit(charCode)) {
 		this.eat(charCode);
 		return intPart;
 	}
 
-	return this.nok;
+	return this.end(charCode);
 }
 
 function floatPart(charCode) {
@@ -65,12 +65,16 @@ function floatPart(charCode) {
 		return floatPart;
 	}
 
-	return this.nok;
+	return this.end(charCode);
 }
 
 // Used as a transformer on token values which are strings
-function toNumber(str) {
-	return Number(str);
+function toNumber(token) {
+	return Number(token.value);
+}
+
+function toValue(token) {
+	return token.value;
 }
 
 const numberSm = new StateMachine("start",
@@ -82,26 +86,29 @@ const numberSm = new StateMachine("start",
 		floatPart,
 	},
 	{
-		intPart: toNumber,
-		floatPart: toNumber,
-		eIntPart: toNumber,
-	}
+		transformers: {
+			sign: toValue,
+			intPart: toNumber,
+			floatPart: toNumber,
+			eSign: toValue,
+			eIntPart: toNumber,
+		},
+		type: "parallel",
+	},
 );
 
 export class EmalNumber {
 	constructor(numberStr) {
 		// Use defaults because some parts of the number are optional
 		const defaultTokens = {
-			sign: "+",
-			floatPart: 0,
-			eSign: "+",
-			eIntPart: 0,
+			sign: { value: "+" },
+			floatPart: { value: 0 },
+			eSign: { value: "+" },
+			eIntPart: { value: 0 },
 		};
 
-		this.tokens = numberSm
-			.run(numberStr, defaultTokens)
-			.transform()
-			.tokens;
+		const runnerOutput = numberSm.run(numberStr, defaultTokens).transform();
+		this.tokens = runnerOutput.tokens;
 	}
 
 	toString() {
