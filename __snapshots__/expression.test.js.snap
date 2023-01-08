@@ -1,0 +1,85 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`delegates number parsing 1`] = `
+[
+  {
+    "type": "variable",
+    "value": "a",
+  },
+  {
+    "children": EmalNumber {
+      "tokens": {
+        "eIntPart": 2,
+        "eSign": "-",
+        "floatPart": 5,
+        "intPart": 2,
+        "sign": "-",
+      },
+    },
+    "type": "number",
+    "value": "",
+  },
+  {
+    "type": "operator",
+    "value": "*",
+  },
+]
+`;
+
+exports[`tokenizes in RPN 1`] = `
+[
+  {
+    "type": "variable",
+    "value": "a",
+  },
+  {
+    "type": "variable",
+    "value": "b",
+  },
+  {
+    "type": "variable",
+    "value": "a",
+  },
+  {
+    "type": "operator",
+    "value": "*",
+  },
+  {
+    "type": "variable",
+    "value": "a",
+  },
+  {
+    "type": "variable",
+    "value": "b",
+  },
+  {
+    "type": "operator",
+    "value": "-",
+  },
+  {
+    "type": "operator",
+    "value": "+",
+  },
+  {
+    "type": "operator",
+    "value": "+",
+  },
+]
+`;
+
+exports[`tokenizes simple expression 1`] = `
+[
+  {
+    "type": "variable",
+    "value": "a",
+  },
+  {
+    "type": "variable",
+    "value": "b",
+  },
+  {
+    "type": "operator",
+    "value": "+",
+  },
+]
+`;

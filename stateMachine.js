@@ -53,6 +53,25 @@ export class StateMachine {
 			}
 		}
 
+		// Delegate the parsing to another state machine
+		function delegate(sm, context, tokenName) {
+			const substr = input.substr(globalThis.position);
+			const subRunner = sm.run(substr).transform();
+			
+			if(subRunner.hasThrown()) return false;
+
+			// Remove one because position returned is length parsed + 1
+			// Remove another one because the character loop had already counted one character.
+			globalThis.position += subRunner.position - 2;
+
+			const extendedContext = Object.assign({}, context, {
+				children: subRunner.tokens,
+			});
+
+			token(extendedContext, tokenName);
+			return true;
+		}
+
 		function eat(charCode) {
 			tokens[currentToken].value += String.fromCharCode(charCode);
 		}
@@ -68,13 +87,13 @@ export class StateMachine {
 		}
 
 		// Fake context is made of utilities and user-defined states
-		let _this = { eat, token, end, nok };
+		let _this = { token, delegate, eat, end, nok };
 		Object.assign(_this, this.states);
 
 		let parsingState = this.states[this.startState];
 
-		for(let charIdx = 0; this.currentState === MS.RUNNING; charIdx++) {
-			const charCode = input.charCodeAt(charIdx);
+		for(this.position = 0; this.currentState === MS.RUNNING; this.position++) {
+			const charCode = input.charCodeAt(this.position);
 			const result = parsingState.call(_this, charCode);
 
 			if(typeof result === "function") {
@@ -82,7 +101,7 @@ export class StateMachine {
 			}
 
 			// Force loop to end (on error) after end of input
-			if(charIdx >= input.length && this.currentState === MS.RUNNING) {
+			if(this.position >= input.length && this.currentState === MS.RUNNING) {
 				this.currentState = MS.ERROR;
 				break;
 			}
@@ -105,5 +124,9 @@ export class StateMachine {
 		this.currentState = MS.TRANSFORMED;
 
 		return this;
+	}
+
+	hasThrown() {
+		return this.currentState === MS.ERROR;
 	}
 }

@@ -77,7 +77,7 @@ function toValue(token) {
 	return token.value;
 }
 
-const numberSm = new StateMachine("start",
+export const numberSm = new StateMachine("start",
 	{
 		start,
 		sign,
@@ -98,17 +98,21 @@ const numberSm = new StateMachine("start",
 );
 
 export class EmalNumber {
-	constructor(numberStr) {
+	constructor(tokens) {
 		// Use defaults because some parts of the number are optional
 		const defaultTokens = {
-			sign: { value: "+" },
-			floatPart: { value: 0 },
-			eSign: { value: "+" },
-			eIntPart: { value: 0 },
+			sign: "+",
+			floatPart: 0,
+			eSign: "+",
+			eIntPart: 0,
 		};
 
-		const runnerOutput = numberSm.run(numberStr, defaultTokens).transform();
-		this.tokens = runnerOutput.tokens;
+		this.tokens = Object.assign({}, defaultTokens, tokens);
+	}
+
+	static fromString(numberStr) {
+		const runnerOutput = numberSm.run(numberStr).transform();
+		return new EmalNumber(runnerOutput.tokens);
 	}
 
 	toString() {
