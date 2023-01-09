@@ -8,13 +8,8 @@ exports[`delegates number parsing 1`] = `
   },
   {
     "children": EmalNumber {
-      "tokens": {
-        "eIntPart": 2,
-        "eSign": "-",
-        "floatPart": 5,
-        "intPart": 2,
-        "sign": "-",
-      },
+      "decimalPlace": 3n,
+      "rawInt": -25n,
     },
     "type": "number",
     "value": "",

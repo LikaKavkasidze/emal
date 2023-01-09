@@ -1,4 +1,5 @@
 import { Expression } from "./expression.js";
+import { EmalNumber } from "./number.js";
 
 class MockNumber {
 	constructor(inner) {
@@ -44,4 +45,14 @@ test("tokenizes in RPN", () => {
 test("delegates number parsing", () => {
 	const expr = new Expression("a * -2.5e-2");
 	expect(expr.tokens).toMatchSnapshot();
+});
+
+test("supports Emal numbers", () => {
+	const a = EmalNumber.fromString("1.52");
+	const b = EmalNumber.fromString("5e-1");
+
+	const expr = new Expression("(a + b) / 2");
+	const res = expr.evaluate({ a, b });
+
+	expect(res.toString()).toEqual("1,01");
 });

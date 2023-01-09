@@ -1,0 +1,22 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`allows commas 1`] = `
+EmalNumber {
+  "decimalPlace": 2n,
+  "rawInt": 52073n,
+}
+`;
+
+exports[`supports scientific numbers 1`] = `
+EmalNumber {
+  "decimalPlace": 8n,
+  "rawInt": 456n,
+}
+`;
+
+exports[`supports simple numbers 1`] = `
+EmalNumber {
+  "decimalPlace": 2n,
+  "rawInt": 944n,
+}
+`;

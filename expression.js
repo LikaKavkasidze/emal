@@ -105,7 +105,7 @@ export class Expression {
 		const tokens = runnerOutput.tokens
 			.map(tok => {
 				if(tok.type === "number") {
-					tok.children = new EmalNumber(tok.children);
+					tok.children = EmalNumber.fromTokens(tok.children);
 				}
 
 				return tok;
@@ -167,7 +167,7 @@ export class Expression {
 		return this.tokens.reduce((acc, tok) => {
 			switch(tok.type) {
 				case "number":
-					acc.push(tok.value);
+					acc.push(tok.children);
 					break;
 				
 				case "variable":

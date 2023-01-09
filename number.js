@@ -1,14 +1,18 @@
 /// Emal – Acquire and process scientific data with ease
 /// number.js – Parser of arbitrary precision numbers.
 ///
-/// An Emal number is specified by a sign, an integer part (Number), a
-/// floating part (Number) and eventually an exponent (Number) and
-/// exponent sign.
+/// An Emal number is stored as a large integer (BigInt) with decimal
+/// place position.
 /// Parsing is based on a state machine with states corresponding to
 /// parts of the number.
 
 import { StateMachine } from "./stateMachine.js";
 import { isDigit, isSign, isComma } from "./matchers.js";
+
+// Default decimal count for `toString`
+const ENUMBER_DEFAULT_DC = 2;
+// Default extra decimals computed for division
+const ENUMBER_DEFAULT_DIV_OFFSET = BigInt(ENUMBER_DEFAULT_DC + 2);
 
 // Define a start state which defines a local variable and simply returns.
 // This declared local variable is used to construct tokens generically, so 
@@ -70,7 +74,7 @@ function floatPart(charCode) {
 
 // Used as a transformer on token values which are strings
 function toNumber(token) {
-	return Number(token.value);
+	return BigInt(token.value);
 }
 
 function toValue(token) {
@@ -88,8 +92,8 @@ export const numberSm = new StateMachine("start",
 	{
 		transformers: {
 			sign: toValue,
-			intPart: toNumber,
-			floatPart: toNumber,
+			intPart: toValue,
+			floatPart: toValue,
 			eSign: toValue,
 			eIntPart: toNumber,
 		},
@@ -97,33 +101,105 @@ export const numberSm = new StateMachine("start",
 	},
 );
 
+function BIPow(n, p) {
+	let o = n;
+
+	for(; p > 1; p--) {
+		o *= n;
+	}
+
+	return o;
+}
+
+function preprocessOp(a, b) {
+	let aInt = a.rawInt;
+	let bInt = b.rawInt;
+
+	let aLen = a.decimalPlace;
+	let bLen = b.decimalPlace;
+
+	if(aLen > bLen) {
+		const delta = aLen - bLen;
+		bInt *= BIPow(10n, delta);
+		bLen += delta;
+	} else if(bLen > aLen) {
+		const delta = bLen - aLen;
+		aInt *= BIPow(10n, delta);
+		aLen += delta;
+	}
+
+	return {
+		aInt,
+		bInt,
+		oLen: aLen,
+	};
+}
+
 export class EmalNumber {
-	constructor(tokens) {
+	constructor(rawInt, decimalPlace) {
+		this.rawInt = rawInt;
+		this.decimalPlace = decimalPlace;
+	}
+
+	static fromTokens(userTokens) {
 		// Use defaults because some parts of the number are optional
 		const defaultTokens = {
 			sign: "+",
-			floatPart: 0,
+			floatPart: "0",
 			eSign: "+",
-			eIntPart: 0,
+			eIntPart: "0",
 		};
 
-		this.tokens = Object.assign({}, defaultTokens, tokens);
+		const tokens = Object.assign({}, defaultTokens, userTokens);
+
+		const rawInt = BigInt(`${tokens.sign}${tokens.intPart}${tokens.floatPart}`);
+		const exponent = BigInt(`${tokens.eSign}${tokens.eIntPart}`);
+		const decimalPlace = BigInt(tokens.floatPart.length) - exponent;
+
+		return new EmalNumber(rawInt, decimalPlace);
 	}
 
 	static fromString(numberStr) {
 		const runnerOutput = numberSm.run(numberStr).transform();
-		return new EmalNumber(runnerOutput.tokens);
+		return EmalNumber.fromTokens(runnerOutput.tokens);
 	}
 
-	toString() {
-		const t = this.tokens;
+	toString(decimalCount) {
+		// Dynamic default argument
+		if(typeof decimalCount !== "number") decimalCount = ENUMBER_DEFAULT_DC;
 
-		let stringified = `${t.sign === "-" ? "-" : ''}${t.intPart},${t.floatPart}`;
+		const { rawInt, decimalPlace } = this;
 
-		if(t.eIntPart !== 0) {
-			stringified += `e${t.eSign === "-" ? "-" : ''}${t.eIntPart}`;
-		}
+		const intStr = rawInt.toString(10);
+		const exponent = BigInt(intStr.length) - decimalPlace - 1n;
 
-		return stringified;
+		const intPart = intStr.substr(0, 1);
+		const floatPart = intStr.substr(1, decimalCount);
+
+		return `${intPart},${floatPart}${exponent !== 0n ? "e".concat(exponent) : ""}`
+	}
+
+	static add(a, b) {
+		const { aInt, bInt, oLen } = preprocessOp(a, b);
+		return new EmalNumber(aInt + bInt, oLen);
+	}
+
+	static sub(a, b) {
+		const { aInt, bInt, oLen } = preprocessOp(a, b);
+		return new EmalNumber(aInt - bInt, oLen);
+	}
+
+	static mul(a, b) {
+		const { aInt, bInt, oLen } = preprocessOp(a, b);
+		return new EmalNumber(aInt * bInt, oLen * 2n);
+	}
+
+	static div(a, b) {
+		const { aInt, bInt, oLen } = preprocessOp(a, b);
+		// Dividing arbitrary precision numbers cannot be done
+		// with infinite precision, here the number is cut to
+		// ENUMBER_DEFAULT_DIV_OFFSET digits after decimal point.
+		const offset = ENUMBER_DEFAULT_DIV_OFFSET + oLen;
+		return new EmalNumber(aInt * BIPow(10n, offset) / bInt, offset);
 	}
 }
