@@ -1,0 +1,42 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`parses code 1`] = `
+[
+  {
+    "expression": Expression {
+      "tokens": [
+        {
+          "children": EmalNumber {
+            "decimalPlace": 1n,
+            "rawInt": 20n,
+          },
+          "type": "number",
+          "value": "",
+        },
+      ],
+    },
+    "keyword": "let",
+    "variable": "a0",
+  },
+  {
+    "expression": Expression {
+      "tokens": [
+        {
+          "type": "variable",
+          "value": "x",
+        },
+        {
+          "type": "variable",
+          "value": "a0",
+        },
+        {
+          "type": "operator",
+          "value": "/",
+        },
+      ],
+    },
+    "keyword": "let",
+    "variable": "y",
+  },
+]
+`;

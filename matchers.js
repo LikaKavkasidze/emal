@@ -2,7 +2,6 @@
 /// matchers.js – Utilities to categorize characters.
 
 const DIGITS = [48, 49, 50, 51, 52, 53, 54, 55, 56, 57];
-const WHITESPACES = [9, 10, 13, 32];
 
 // 43 = "+" | 45 = "-"
 export function isSign(charCode) {
@@ -28,6 +27,12 @@ export function isDigit(charCode) {
 	return DIGITS.includes(charCode);
 };
 
+// 9 = "<Tab>" | 32 = " "
 export function isWhitespace(charCode) {
-	return WHITESPACES.includes(charCode);
+	return charCode === 9 || charCode === 32;
+};
+
+// 10 = "<LF>" | 13 = "<CR>"
+export function isNewline(charCode) {
+	return charCode === 10 || charCode === 13;
 };
