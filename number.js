@@ -12,7 +12,7 @@ import { isDigit, isSign, isComma } from "./matchers.js";
 // Default decimal count for `toString`
 const ENUMBER_DEFAULT_DC = 2;
 // Default extra decimals computed for division
-const ENUMBER_DEFAULT_DIV_OFFSET = BigInt(ENUMBER_DEFAULT_DC + 2);
+const ENUMBER_DEFAULT_DIV_OFFSET = ENUMBER_DEFAULT_DC;
 
 // Define a start state which defines a local variable and simply returns.
 // This declared local variable is used to construct tokens generically, so 
@@ -199,7 +199,7 @@ export class EmalNumber {
 		// Dividing arbitrary precision numbers cannot be done
 		// with infinite precision, here the number is cut to
 		// ENUMBER_DEFAULT_DIV_OFFSET digits after decimal point.
-		const offset = ENUMBER_DEFAULT_DIV_OFFSET + oLen;
+		const offset = BigInt(ENUMBER_DEFAULT_DIV_OFFSET) + oLen;
 		return new EmalNumber(aInt * BIPow(10n, offset) / bInt, offset);
 	}
 }
