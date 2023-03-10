@@ -1,0 +1,51 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`declares columns 1`] = `
+[
+  Column {
+    "dependents": [],
+    "isComputed": false,
+    "name": "V",
+    "uncertainty": undefined,
+    "unit": Unit {
+      "id": {
+        "den": 1,
+        "num": 19,
+      },
+      "multiplier": 0.001,
+      "userName": "mL",
+    },
+  },
+  Column {
+    "dependents": [],
+    "isComputed": false,
+    "name": "n",
+    "uncertainty": undefined,
+    "unit": Unit {
+      "id": {
+        "den": 1,
+        "num": 13,
+      },
+      "multiplier": 0.001,
+      "userName": "mmol",
+    },
+  },
+]
+`;
+
+exports[`declares rows 1`] = `
+[
+  {
+    "V": EmalNumber {
+      "decimalPlace": 1n,
+      "rawInt": 21n,
+    },
+  },
+  {
+    "V": EmalNumber {
+      "decimalPlace": 1n,
+      "rawInt": 33n,
+    },
+  },
+]
+`;
