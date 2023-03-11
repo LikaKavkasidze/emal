@@ -21,6 +21,48 @@ exports[`delegates number parsing 1`] = `
 ]
 `;
 
+exports[`distinguishes number comma and argument separator 1`] = `
+[
+  {
+    "children": EmalNumber {
+      "decimalPlace": 1n,
+      "rawInt": 25n,
+    },
+    "type": "number",
+    "value": "",
+  },
+  {
+    "type": "variable",
+    "value": "a",
+  },
+  {
+    "type": "variable",
+    "value": "b",
+  },
+  {
+    "type": "function",
+    "value": "max",
+  },
+  {
+    "type": "operator",
+    "value": "*",
+  },
+]
+`;
+
+exports[`tokenizes function 1`] = `
+[
+  {
+    "type": "variable",
+    "value": "cH3O",
+  },
+  {
+    "type": "function",
+    "value": "log",
+  },
+]
+`;
+
 exports[`tokenizes in RPN 1`] = `
 [
   {

@@ -2,15 +2,15 @@
 /// expression.js – Calculator for generic expressions.
 ///
 /// An expression is a string representing operations to be done.
-/// Example: 0.75 + 2 * x
+/// Example: 0.75 + 2 * log(x)
 /// Expressions are represented as a sequence of tokens, in Reverse
 /// Polish Notation (RPN).
 
-import { isWhitespace, isDigit, isSign, isOpeningBracket, isClosingBracket } from "./matchers.js";
+import { isWhitespace, isDigit, isSign, isOpeningBracket, isClosingBracket, isCommaSeparator } from "./matchers.js";
 import { EmalNumber, numberSm } from "./number.js";
 import { StateMachine } from "./stateMachine.js";
 
-const ATOMIC_FUNCTIONS = {
+const EEXPR_OPERATORS = {
 	"+": {
 		priority: 1,
 		methodName: "add",
@@ -29,10 +29,22 @@ const ATOMIC_FUNCTIONS = {
 	},
 };
 
-const ATOMIC_CHARS = Object.keys(ATOMIC_FUNCTIONS).map(c => c.charCodeAt(0));
+const EEXPR_FUNCTIONS = {
+	"log": {
+		argumentCount: 1,
+		methodName: "log10",
+	},
+	"max": {
+		argumentCount: 2,
+		methodName: "max",
+	},
+};
+
+const EEXPR_OPERATOR_CHARS = Object.keys(EEXPR_OPERATORS).map(c => c.charCodeAt(0));
+const EEXPR_FUNCTION_NAMES = Object.keys(EEXPR_FUNCTIONS);
 
 function isOperator(charCode) {
-	return ATOMIC_CHARS.includes(charCode);
+	return EEXPR_OPERATOR_CHARS.includes(charCode);
 }
 
 function exprToken(charCode) {
@@ -45,14 +57,19 @@ function exprToken(charCode) {
 	}
 
 	const opCond = isOperator(charCode);
+	const csCond = isCommaSeparator(charCode);
 	const obCond = isOpeningBracket(charCode);
 	const cbCond = isClosingBracket(charCode);
 
-	// Both operators and brackets are single-eaten under a token
-	if(opCond || obCond || cbCond) {
+	// Operators, brackets and commas are single-eaten under a token
+	if(opCond || csCond || obCond || cbCond) {
 		if(opCond) {
 			this.token({
 				type: "operator",
+			});
+		} else if(csCond) {
+			this.token({
+				type: "comma",
 			});
 		} else {
 			this.token({
@@ -73,26 +90,38 @@ function exprToken(charCode) {
 		return this.end(charCode);
 	}
 
+	// By default, token is expected to be a variable and will later be
+	// mutated if the name matches a function name.
 	this.token({ type: "variable" });
-	return this.variable(charCode);
+	return this.variableOrFunction(charCode);
 }
 
-function variable(charCode) {
-	if(isWhitespace(charCode) || isOperator(charCode) || isOpeningBracket(charCode) || isClosingBracket(charCode)) {
+function variableOrFunction(charCode) {
+	if(isWhitespace(charCode) || isOperator(charCode) || isOpeningBracket(charCode) || isClosingBracket(charCode) || isCommaSeparator(charCode)) {
+		// Mutate token to function if a function name is found
+		if(EEXPR_FUNCTION_NAMES.includes(this.eaten())) {
+			this.mutate({ type: "function" });
+		}
+
 		return this.exprToken(charCode);
 	}
 
 	if(isNaN(charCode)) {
+		// Mutate token to function if a function name is found
+		if(EEXPR_FUNCTION_NAMES.includes(this.eaten())) {
+			this.mutate({ type: "function" });
+		}
+
 		return this.end(charCode);
 	}
 
 	this.eat(charCode);
-	return variable;
+	return variableOrFunction;
 }
 
 const expressionSm = new StateMachine("exprToken", {
 	exprToken,
-	variable,
+	variableOrFunction,
 }, {
 	type: "sequential"
 });
@@ -121,11 +150,15 @@ export class Expression {
 					acc.tokens.push(cur);
 					break;
 
+				case "function":
+					acc.stack.push(cur);
+					break;
+
 				case "operator":
-					const currentPriority = ATOMIC_FUNCTIONS[cur.value].priority;
+					const currentPriority = EEXPR_OPERATORS[cur.value].priority;
 					let op = acc.stack.pop();
 
-					while(op && op.type !== "bracket" && ATOMIC_FUNCTIONS[op.value].priority > currentPriority) {
+					while(op && op.type !== "bracket" && EEXPR_OPERATORS[op.value].priority > currentPriority) {
 						acc.tokens.push(op);
 						op = acc.stack.pop();
 					}
@@ -136,6 +169,7 @@ export class Expression {
 					break;
 
 				case "bracket":
+				case "comma":
 					if(cur.bracketType === "opening") {
 						acc.stack.push(cur);
 					} else {
@@ -174,11 +208,19 @@ export class Expression {
 					const value = variables[tok.value];
 					acc.push(value);
 					break;
-	
+
 				case "operator":
-					const { methodName } = ATOMIC_FUNCTIONS[tok.value];
-					const args = acc.splice(-2, 2);
+					const opMethodName = EEXPR_OPERATORS[tok.value].methodName;
+					const opArgs = acc.splice(-2, 2);
 					// Assume all arguments are of the same type
+					const opMethod = opArgs[0].constructor[opMethodName];
+
+					acc.push(opMethod.apply(null, opArgs));
+					break;
+
+				case "function":
+					const { methodName, argumentCount } = EEXPR_FUNCTIONS[tok.value];
+					const args = acc.splice(-argumentCount, argumentCount);
 					const method = args[0].constructor[methodName];
 
 					acc.push(method.apply(null, args));

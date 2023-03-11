@@ -76,6 +76,14 @@ export class StateMachine {
 			tokens[currentToken].value += String.fromCharCode(charCode);
 		}
 
+		function mutate(context) {
+			Object.assign(tokens[currentToken], context);
+		}
+
+		function eaten() {
+			return tokens[currentToken].value;
+		}
+
 		function end() {
 			globalThis.currentState = MS.PARSED;
 			return end;
@@ -87,7 +95,7 @@ export class StateMachine {
 		}
 
 		// Fake context is made of utilities and user-defined states
-		let _this = { token, delegate, eat, end, nok };
+		let _this = { token, delegate, eat, mutate, eaten, end, nok };
 		Object.assign(_this, this.states);
 
 		let parsingState = this.states[this.startState];

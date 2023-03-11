@@ -9,8 +9,13 @@ export function isSign(charCode) {
 };
 
 // 44 = "," | 46 = "."
-export function isComma(charCode) {
+export function isDecimalPoint(charCode) {
 	return charCode === 44 || charCode === 46;
+};
+
+// 44 = "," | 59 = ";"
+export function isCommaSeparator(charCode) {
+	return charCode === 44 || charCode === 59;
 };
 
 // 40 = "(" | 91 = "["

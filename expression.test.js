@@ -21,10 +21,27 @@ class MockNumber {
 	static div(a, b) {
 		return new MockNumber(a.inner / b.inner);
 	}
+
+	static log10(a) {
+		return new MockNumber(Math.log10(a.inner));
+	}
+
+	static max(a, b) {
+		if(a.inner >= b.inner) {
+			return new MockNumber(a.inner);
+		} else {
+			return new MockNumber(b.inner);
+		}
+	}
 }
 
 test("tokenizes simple expression", () => {
 	const expr = new Expression("a + b");
+	expect(expr.tokens).toMatchSnapshot();
+});
+
+test("tokenizes function", () => {
+	const expr = new Expression("log(cH3O)");
 	expect(expr.tokens).toMatchSnapshot();
 });
 
@@ -35,6 +52,22 @@ test("executes simple expression", () => {
 	const b = new MockNumber(1.22);
 
 	expect(expr.evaluate({ a, b }).inner).toEqual(5.77);
+});
+
+test("executes function", () => {
+	const expr = new Expression("log(cH3O)");
+	const cH3O = new MockNumber(1.22);
+
+	expect(expr.evaluate({ cH3O }).inner).toEqual(Math.log10(1.22));
+});
+
+test("executes function with multiple arguments", () => {
+	const expr = new Expression("max(a; b)");
+
+	const a = new MockNumber(4.55);
+	const b = new MockNumber(1.22);
+
+	expect(expr.evaluate({ a, b }).inner).toEqual(4.55);
 });
 
 test("tokenizes in RPN", () => {
@@ -55,4 +88,9 @@ test("supports Emal numbers", () => {
 	const res = expr.evaluate({ a, b });
 
 	expect(res.toString()).toEqual("1,01");
+});
+
+test("distinguishes number comma and argument separator", () => {
+	const expr = new Expression("2,5 * max(a, b)");
+	expect(expr.tokens).toMatchSnapshot();
 });
