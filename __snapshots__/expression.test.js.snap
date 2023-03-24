@@ -9,6 +9,7 @@ exports[`delegates number parsing 1`] = `
   {
     "children": EmalNumber {
       "decimalPlace": 3n,
+      "isNegative": true,
       "rawInt": -25n,
     },
     "type": "number",
@@ -26,6 +27,7 @@ exports[`distinguishes number comma and argument separator 1`] = `
   {
     "children": EmalNumber {
       "decimalPlace": 1n,
+      "isNegative": false,
       "rawInt": 25n,
     },
     "type": "number",

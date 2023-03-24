@@ -3,20 +3,31 @@
 exports[`allows commas 1`] = `
 EmalNumber {
   "decimalPlace": 2n,
+  "isNegative": false,
   "rawInt": 52073n,
 }
 `;
 
-exports[`supports scientific numbers 1`] = `
+exports[`tokenizes numbers 1`] = `
+EmalNumber {
+  "decimalPlace": 2n,
+  "isNegative": false,
+  "rawInt": 944n,
+}
+`;
+
+exports[`tokenizes numbers 2`] = `
 EmalNumber {
   "decimalPlace": 8n,
+  "isNegative": false,
   "rawInt": 456n,
 }
 `;
 
-exports[`supports simple numbers 1`] = `
+exports[`tokenizes numbers 3`] = `
 EmalNumber {
-  "decimalPlace": 2n,
-  "rawInt": 944n,
+  "decimalPlace": 4n,
+  "isNegative": true,
+  "rawInt": -45n,
 }
 `;

@@ -7,7 +7,7 @@
 /// parts of the number.
 
 import { StateMachine } from "./stateMachine.js";
-import { isDigit, isSign, isComma } from "./matchers.js";
+import { isDigit, isSign, isDecimalPoint } from "./matchers.js";
 
 // Default decimal count for `toString`
 const ENUMBER_DEFAULT_DC = 2;
@@ -49,7 +49,7 @@ function intPart(charCode) {
 		this.isExponent = true;
 		return sign;
 	// Exponents cannot have a floating part
-	} else if(isComma(charCode) && !this.isExponent) {
+	} else if(isDecimalPoint(charCode) && !this.isExponent) {
 		this.token({}, "floatPart");
 		return floatPart;
 	} else if(isDigit(charCode)) {
@@ -101,16 +101,6 @@ export const numberSm = new StateMachine("start",
 	},
 );
 
-function BIPow(n, p) {
-	let o = n;
-
-	for(; p > 1; p--) {
-		o *= n;
-	}
-
-	return o;
-}
-
 function preprocessOp(a, b) {
 	let aInt = a.rawInt;
 	let bInt = b.rawInt;
@@ -120,11 +110,11 @@ function preprocessOp(a, b) {
 
 	if(aLen > bLen) {
 		const delta = aLen - bLen;
-		bInt *= BIPow(10n, delta);
+		bInt *= 10n ** delta;
 		bLen += delta;
 	} else if(bLen > aLen) {
 		const delta = bLen - aLen;
-		aInt *= BIPow(10n, delta);
+		aInt *= 10n ** delta;
 		aLen += delta;
 	}
 
@@ -135,10 +125,26 @@ function preprocessOp(a, b) {
 	};
 }
 
+function logRestrictTest(x) {
+	const firstChar = x.rawInt.toString(10).charAt(0);
+
+	if(["7", "8", "9"].includes(firstChar)) return true;
+	else if(firstChar === "1") {
+		const secondChar = x.rawInt.toString(10).charAt(1);
+
+		if(["0", "1", "2", "3"].includes(secondChar)) return true;
+	}
+
+	return false;
+}
+
 export class EmalNumber {
+	static INV_LN10 = new EmalNumber(43429448190325182765n, 20n);
+
 	constructor(rawInt, decimalPlace) {
 		this.rawInt = rawInt;
 		this.decimalPlace = decimalPlace;
+		this.isNegative = rawInt < 0;
 	}
 
 	static fromTokens(userTokens) {
@@ -164,19 +170,62 @@ export class EmalNumber {
 		return EmalNumber.fromTokens(runnerOutput.tokens);
 	}
 
+	static fromInt(n) {
+		return new EmalNumber(BigInt(n), 0n);
+	}
+
+	rawLength() {
+		let rawLength = BigInt(this.rawInt.toString(10).length);
+		if(this.isNegative) rawLength--;
+
+		return rawLength;
+	}
+
 	toString(decimalCount) {
 		// Dynamic default argument
 		if(typeof decimalCount !== "number") decimalCount = ENUMBER_DEFAULT_DC;
+		// Compute one extra decimal for rounding and one for the
+		// integer part (before comma).
+		const neededLen = BigInt(decimalCount + 2);
+		let intLen = this.rawLength();
 
-		const { rawInt, decimalPlace } = this;
+		// Add trailing zeroes if necessary
+		if(neededLen > intLen) {
+			const delta = neededLen - intLen;
 
-		const intStr = rawInt.toString(10);
-		const exponent = BigInt(intStr.length) - decimalPlace - 1n;
+			this.rawInt *= 10n ** delta;
+			this.decimalPlace += delta;
+			intLen += delta;
+		}
 
-		const intPart = intStr.substr(0, 1);
-		const floatPart = intStr.substr(1, decimalCount);
+		let { rawInt, decimalPlace, isNegative } = this;
+		// Add 5 to the digit following the cut to avoid truncation
+		if(isNegative) rawInt -= 5n * 10n ** BigInt(intLen - neededLen);
+		else rawInt += 5n * 10n ** BigInt(intLen - neededLen);
+
+		const exponent = BigInt(intLen) - decimalPlace - 1n;
+		let intStr = rawInt.toString(10);
+
+		const intPart = isNegative ? intStr.substr(0, 2) : intStr.substr(0, 1);
+		const floatPart = isNegative ? intStr.substr(2, decimalCount) : intStr.substr(1, decimalCount);
 
 		return `${intPart},${floatPart}${exponent !== 0n ? "e".concat(exponent) : ""}`
+	}
+
+	clone() {
+		return new EmalNumber(this.rawInt, this.decimalPlace);
+	}
+
+	// Simplify a number without loosing precision by removing trailing zeroes
+	simplify() {
+		const intStr = this.rawInt.toString(10);
+
+		for(let i = intStr.length - 1; intStr.charAt(i) === '0'; i--) {
+			this.rawInt /= 10n;
+			this.decimalPlace--;
+		}
+
+		return this;
 	}
 
 	static add(a, b) {
@@ -200,6 +249,44 @@ export class EmalNumber {
 		// with infinite precision, here the number is cut to
 		// ENUMBER_DEFAULT_DIV_OFFSET digits after decimal point.
 		const offset = BigInt(ENUMBER_DEFAULT_DIV_OFFSET) + oLen;
-		return new EmalNumber(aInt * BIPow(10n, offset) / bInt, offset);
+		return new EmalNumber(aInt * 10n ** offset / bInt, offset);
+	}
+
+	static log10(initialX) {
+		// Argument reduction: returns a number starting with 7, 8, 9, 10, 11,
+		// 12 or 13.
+		let x = initialX.clone();
+		let preprocessPow = 1n;
+	
+		while(!logRestrictTest(x)) {
+			x = EmalNumber.mul(x, initialX);
+			preprocessPow++;
+		}
+
+		// Argument reduction: divide the number by 10^m to get it in the
+		// range [0.7; 1.3].
+		let preprocessPowTen = x.rawLength() - x.decimalPlace - (x.rawInt.toString(10).charAt(0) === "1" ? 1n : 0n);
+		x.decimalPlace += preprocessPowTen;
+
+		// Use power series for log(1 + x) near x = 0
+		const delta = EmalNumber.sub(x, EmalNumber.fromInt(1));
+	
+		let deltaPow = delta.clone();
+		let result = EmalNumber.fromInt(0);
+	
+		for(let i = 1; i < 10; i++) {
+			const divisor = (i % 2 === 0 ? -1 : 1) * i;
+			const prefactor = EmalNumber.div(EmalNumber.INV_LN10, EmalNumber.fromInt(divisor));
+	
+			result = EmalNumber.add(result, EmalNumber.mul(prefactor, deltaPow));
+			deltaPow = EmalNumber.mul(deltaPow, delta);
+		}
+	
+		// Reverse argument reduction using log(x * 10^m) = log(x) - m
+		// and log(x^n) = n log x.
+		const powTenCorrected = EmalNumber.add(result, EmalNumber.fromInt(preprocessPowTen));
+		const powCorrected = EmalNumber.div(powTenCorrected, EmalNumber.fromInt(preprocessPow));
+	
+		return powCorrected.simplify();
 	}
 }

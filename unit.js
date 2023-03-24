@@ -225,4 +225,9 @@ export class Unit {
 
 		return new Unit(num, den, multiplier);
 	}
+
+	static log10(a) {
+		// TODO: handle case where multiplier is not unitary
+		return new Unit(1, 1, 1);
+	}
 }

@@ -8,6 +8,7 @@ exports[`parses code 1`] = `
         {
           "children": EmalNumber {
             "decimalPlace": 1n,
+            "isNegative": false,
             "rawInt": 20n,
           },
           "type": "number",

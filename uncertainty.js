@@ -62,4 +62,12 @@ export class UncertainValue {
 
 		return new UncertainValue(value, cAbsU);
 	}
+
+	static log10(a) {
+		const value = EmalNumber.log10(a.value);
+		const relU = EmalNumber.div(a.absU, a.value);
+		const logAbsU = EmalNumber.mul(relU, EmalNumber.INV_LN10);
+
+		return new UncertainValue(value, logAbsU);
+	}
 }

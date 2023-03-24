@@ -38,12 +38,14 @@ exports[`declares rows 1`] = `
   {
     "V": EmalNumber {
       "decimalPlace": 1n,
+      "isNegative": false,
       "rawInt": 21n,
     },
   },
   {
     "V": EmalNumber {
       "decimalPlace": 1n,
+      "isNegative": false,
       "rawInt": 33n,
     },
   },
