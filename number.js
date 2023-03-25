@@ -1,6 +1,11 @@
 /// Emal – Acquire and process scientific data with ease
 /// number.js – Parser of arbitrary precision numbers.
 ///
+/// Copyright (C) 2023 Titouan (Stalone) S.
+/// This program is free software: you can redistribute it and/or modify it
+/// under the terms of the GNU Affero General Public License as published by
+/// the Free Software Foundation, version 3.
+///
 /// An Emal number is stored as a large integer (BigInt) with decimal
 /// place position.
 /// Parsing is based on a state machine with states corresponding to

@@ -1,6 +1,11 @@
 /// Emal – Acquire and process scientific data with ease
 /// fit.js – Tools for curve fitting.
 ///
+/// Copyright (C) 2023 Titouan (Stalone) S.
+/// This program is free software: you can redistribute it and/or modify it
+/// under the terms of the GNU Affero General Public License as published by
+/// the Free Software Foundation, version 3.
+///
 /// Curve fitting uses uncertainty-weighted least squares, solved using a
 /// gradient descent. For proposed models, potential values for the parameters
 /// are guessed to improve convergence.

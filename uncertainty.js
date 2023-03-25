@@ -1,6 +1,11 @@
 /// Emal – Acquire and process scientific data with ease
 /// uncertainty.js – Abstract data structure for scientific values.
 ///
+/// Copyright (C) 2023 Titouan (Stalone) S.
+/// This program is free software: you can redistribute it and/or modify it
+/// under the terms of the GNU Affero General Public License as published by
+/// the Free Software Foundation, version 3.
+///
 /// A full value is made both of a raw value, and of the uncertainty
 /// (or error) associated with the value.
 /// Computing done on the value needs to account for both of these

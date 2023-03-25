@@ -1,6 +1,11 @@
 /// Emal – Acquire and process scientific data with ease
 /// expression.js – Calculator for generic expressions.
 ///
+/// Copyright (C) 2023 Titouan (Stalone) S.
+/// This program is free software: you can redistribute it and/or modify it
+/// under the terms of the GNU Affero General Public License as published by
+/// the Free Software Foundation, version 3.
+///
 /// An expression is a string representing operations to be done.
 /// Example: 0.75 + 2 * log(x)
 /// Expressions are represented as a sequence of tokens, in Reverse

@@ -1,6 +1,11 @@
 /// Emal – Acquire and process scientific data with ease
 /// code.js – Emal code lexer and interpreter.
 ///
+/// Copyright (C) 2023 Titouan (Stalone) S.
+/// This program is free software: you can redistribute it and/or modify it
+/// under the terms of the GNU Affero General Public License as published by
+/// the Free Software Foundation, version 3.
+///
 /// The code lexer is a very simple state machine running on each line of
 /// the user code. Each line expects a strict order: keyword, variable,
 /// potential unit, equal sign and value or expression. Invalid lines are

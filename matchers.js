@@ -1,5 +1,8 @@
 /// Emal – Acquire and process scientific data with ease
 /// matchers.js – Utilities to categorize characters.
+///
+/// Contrary to other files of the project, this source code is not under the
+/// AGPL-3.0, but instead in the public domain, due to it's obvious simplicity.
 
 const DIGITS = [48, 49, 50, 51, 52, 53, 54, 55, 56, 57];
 

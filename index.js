@@ -1,6 +1,11 @@
 /// Emal – Acquire and process scientific data with ease
 /// index.js – Library entry point: data manager.
 ///
+/// Copyright (C) 2023 Titouan (Stalone) S.
+/// This program is free software: you can redistribute it and/or modify it
+/// under the terms of the GNU Affero General Public License as published by
+/// the Free Software Foundation, version 3.
+///
 /// Emal manager is the central part of the library: it
 /// gathers together all other modules, and allows simple
 /// access and update of the data.

@@ -1,6 +1,11 @@
 /// Emal – Acquire and process scientific data with ease
 /// unit.js – Parser and processor of scientific units.
 ///
+/// Copyright (C) 2023 Titouan (Stalone) S.
+/// This program is free software: you can redistribute it and/or modify it
+/// under the terms of the GNU Affero General Public License as published by
+/// the Free Software Foundation, version 3.
+///
 /// An unit is made of three components: an user given name, which should 
 /// always be used if given, a generated identifier used for computing units
 /// in calculations, and a multiplier, which would be a prefix in a more
